@@ -1,6 +1,6 @@
 --- 
-title: "YOUR TITLE HERE"
-author: "YOUR NAMES HERE"
+title: "H1B Visa Analytics"
+author: "Samir Char, Christodoulos Constantinides"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
