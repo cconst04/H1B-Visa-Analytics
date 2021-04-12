@@ -21,19 +21,13 @@ START_YEAR <- 2009
 END_YEAR <- 2020
 ```
 ```{r Loading datasets}
-test <- read.csv('data/raw_lca/2010.csv')
+test <- read.csv('data/raw/lca/2010.csv')
 test <- test[test$LCA_CASE_EMPLOYER_STATE %in% state.abb, ]
-df_ucsis <- data.frame()
-for(year in START_YEAR:2020){
-  tmp <- read.csv(paste0("data/raw_ucsis/", year, ".csv"))
-  df_ucsis <- rbind(df_ucsis, tmp)
-}
-df_ucsis[df_ucsis==""] <- NA
 count_applications <- list()
 #read all years
 df <- data.frame()
 for(year in START_YEAR:END_YEAR){
-  tmp <- read.csv(paste0("data/clean_lca/", year, ".csv"))
+  tmp <- read.csv(paste0("data/processed/lca/", year, ".csv"))
   tmp$year <- year
   df <- rbind(df, tmp)
   count_applications[[year - START_YEAR + 1]] <- nrow(data.frame(tmp))
@@ -44,7 +38,7 @@ df$SOC_CODE <- as.character(df$SOC_CODE)
 df <- df[df$annual_wage > 0  && !is.nan(df$annual_wage),]
 df_2020 <- data.frame()
 for(q in 1:4){
-  tmp <- read.csv(paste0("data/raw_lca/2020_q", q, ".csv"))
+  tmp <- read.csv(paste0("data/raw/lca/2020_q", q, ".csv"))
   df_2020 <- rbind(df_2020, tmp)
 }
 df_2020$BEGIN_MONTH <- month(as.Date(df_2020$BEGIN_DATE, format='%m/%d/%y'))
