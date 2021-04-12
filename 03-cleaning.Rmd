@@ -1,10 +1,15 @@
 # Data transformation
 ## Fields cleaning
 - Some of the fields had html elements and we cleaned them using regular expressions  
-- Some numeric fields were malformatted with text. We removed it with regular expressions  
+- Some numeric fields were malformed with text. We removed it with regular expressions  
 - For some years, wage from and wage to were merged in one column with "-" separator. We splitted it in two columns  
 - Each year had an inconsistent column name. We selected only the columns that were valuable for our graphs and renamed them consistently 
-- 2020 was split in four quarters, so we merged it to only one  
+- 2020 was split in four quarters, so we merged it to only one 
+- The employer names were not standard, so we did some normalization by removing accents, leading and trailing whitespaces etc.  
+- We extracted the first two digits of the SOC codes that describe the job category  
+- For the NAICS codes we extracted the first two digits that represent the industry sector  
+- In general, for all codes we translated to the corresponding definition  
   
 ## Units conversion
-- The employees wage was of varying units:hourly, weekly, bi-weekly, monthly, yearly. For this reason we created a new yearly and an hourly field. For the conversion of hourly to yearly payment we found that at average a person works for 1800 hours per year, source: <>. For monthly to hourly conversion we found that someone works for 173 hours per month on average, source:<>. Also, we assumed that an average US employee works 5 days per week for 8 hours per day  
+- The employees wage was of varying units:hourly, weekly, bi-weekly, monthly, yearly. For this reason we created a yearly and an hourly field. For the conversion of hourly to yearly payment we found that at average a person works for 1800 hours per year (source)[https://stats.oecd.org/Index.aspx?DataSetCode=ANHRS]. For monthly to hourly conversion we found that someone works for 173 hours per month on average. Also, we assumed that an average US employee works 5 days per week for 8 hours per day  
+  

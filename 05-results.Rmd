@@ -29,17 +29,11 @@ END_YEAR <- 2020
 ```{r Loading datasets}
 test <- read.csv('data/raw/lca/2010.csv')
 test <- test[test$LCA_CASE_EMPLOYER_STATE %in% state.abb, ]
-df_ucsis <- data.frame()
-for(year in START_YEAR:2020){
-  tmp <- read.csv(paste0("data/raw/ucsis/", year, ".csv"))
-  df_ucsis <- rbind(df_ucsis, tmp)
-}
-df_ucsis[df_ucsis==""] <- NA
 count_applications <- list()
 #read all years
 df <- data.frame()
 for(year in START_YEAR:END_YEAR){
-  tmp <- read.csv(paste0("data/clean/lca/", year, ".csv"))
+  tmp <- read.csv(paste0("data/processed/lca/", year, ".csv"))
   tmp$year <- year
   df <- rbind(df, tmp)
   count_applications[[year - START_YEAR + 1]] <- nrow(data.frame(tmp))
@@ -59,8 +53,9 @@ counts <- transform(counts, SOC_CODE = JOB_CODES[SOC_CODE])
 counts <- counts[!is.na(counts$SOC_CODE),]
 
 ```
-  
-## Number of applications per year  
+## Analysis through time  
+### Number of applications per year  
+We will now investigate how the number of applications vary each year. In this way we find out whether US is a popular option for immigrant workers and what is the trend of the last years  
 ```{r Applications per year, width=10, height=10}
 ggplot(data=num_applications, aes(x=year, y=total_applications)) +
   geom_line() + labs(y= "Number of applications", x = "Year")
@@ -68,47 +63,57 @@ ggplot(data=num_applications, aes(x=year, y=total_applications)) +
   
 There is a big increase in the number of applications from 2009 to 2016. After that, number of applications fluctuate and they reach 590000 applicants in 2020. This indicates that US gets more and more popular option for skilled workers that want to migrate, probably because of the attractive salaries that increase year by year, which is further analyzed in the next figure  
   
-## Annual salary boxplot    
+### Annual salary boxplot  
+As we saw in the previous graph, US is a popular option among immigrant workers. This could be due to the high salaries that US companies pay. We will investigate how salaries vary per year to see if there is a connection     
 ```{r, width=10, height=10}
 boxplot(annual_wage ~ year, data=df, outline=FALSE, ylab='Yearly Salary')
 ```  
   
-There is an upward trend in the 25th quartile, median, 75th quartile and maximum salary from 2009 to 2020.  We can't say anything about the minimum values because of outliers, even though salaries equal to 0 were removed. We can't remove a bigger value, because each state has different rate of pay and a minimum salary to filter isn't a clear cut   
+There is an upward trend in the 25th quartile, median, 75th quartile and maximum salary from 2009 to 2020.  We can't say anything about the minimum values because of outliers, even though salaries equal to 0 were removed. We can't remove a bigger value, because each state has different rate of pay and a minimum salary to filter out isn't a clear cut   
   
-## Applications by subject  
-```{r, fig.width=12, fig.height=20}
-ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col() + facet_wrap(~ year, ncol=2) + labs(y= "Job sector", x = "Number of applications")
+### Applications by subject  
+We now want to find out which subject provides the most opportunities for an H-1B visa. For this reason, we draw the number of applications for each sector, each year   
+```{r, fig.width=12, fig.height=25}
+ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col(fill="lightblue",color = "black") + facet_wrap(~ year, ncol=2) + labs(y= "Job sector", x = "Number of applications")
 ```  
 Jobs related to computer science and mathematics are the most famous in the H-1B applications every year. There is an increasing trend in the applications of this field from 2009 to 2015 After that the number of applications remains constant at 400000 applications per year. This also applies for the rest of the sectors and confirmed by the number of applications vs year graph  
   
-```{r, echo=FALSE, width=10, height=10}
+```{r, echo=FALSE}
 counts <- counts[counts$SOC_CODE != 'Computer and Maths',]
 ```  
   
-## Applications by subject with Computer Science and Maths removed  
-```{r, fig.width=12, fig.height=20}
-ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col() + facet_wrap(~ year, ncol=2) +
+### Applications by subject with Computer Science and Maths removed  
+As we saw, the vast majority H-1B applications are from people working on jobs related to Computer Science and Maths. We will redraw the graph without these applicants to have a clearer picture about the rest of the job sectors  
+```{r, fig.width=12, fig.height=25}
+ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col(fill="lightblue",color = "black") + facet_wrap(~ year, ncol=2) +
   labs(y= "Job sector", x = "Number of applications")
 ```  
   
-Financial operations is the second most famous job in the H-1B applications every year. There is an initial increase in the number of applications between 2009 and 2012. In 2013 the number of applicants is similar to that of the previous year, followed by an increase in 2014. From 2015 to 2019 total applications in this sector remain constant with around 480000 applicants. In 2020 there is a reduction, with total 400000 applicants. It is worth mentioning that number of applications for each sector between 2011 and 2020 are very similar. This may be because have fixed number of positions for international workers that they are applying for H-1B visa.  For the rest of sectors there is an increase between 2009 and 2011. In 2011 there is a big decrease in the management and community with social services related job applications. For the next 3 years there is a slight fluctuation in each sector. Finally, from 2015 to 2020 the number of applications for the rest of the sector is constant
+Financial operations is the second most famous job in the H-1B applications every year. There is an initial increase in the number of applications between 2009 and 2012. In 2013 the number of applicants is similar to that of the previous year, followed by an increase in 2014. From 2015 to 2019 total applications in this sector remain constant with around 480000 applicants. In 2020 there is a reduction, with total 400000 applicants. It is worth mentioning that number of applications for each sector between 2016 and 2020 are very similar. This may be because there is a fixed number of positions for international workers that they are applying for H-1B visa.  For the rest of sectors there is an increase between 2009 and 2011. In 2011 there is a big decrease in the management and community with social services related job applications. For the next 3 years there is a slight fluctuation in each sector  
 
+## Analysis of most recent year: 2020
 
-```{r, echo=FALSE, eval=FALSE}
+```{r, echo=FALSE}
 df <- read.csv("data/processed/processed_2020.csv") #Using most recent data
-states <- read.csv("data/external/states.csv")
+states <- read.csv("data/raw/states.csv")
 states_population <- read.csv("data/raw/state_population.csv")
 states <- left_join(states,states_population, by=c("State"="NAME"))
 df <- df %>% filter(EMPLOYER_STATE %in% states$Code)
 soc_codes = read.csv("data/processed/soc_codes.csv")
 naics_codes = read.csv("data/processed/naics_sectors.csv")
+personal_income=read.csv("data/processed/personal_income.csv")
+
 ```
+  
 ### Top Employers
 
 Lets look at the top 20 Companies overall in 2020 filing H1-B Visa applications. This means across all industries and jobs.
-```{r, fig.width=10, eval=FALSE}
-top_companies = df %>% group_by(EMPLOYER_NAME) %>%  dplyr::summarise(Frequency = n()) %>% arrange(desc(Frequency))
 
+```{r,echo=FALSE}
+top_companies = df %>% group_by(EMPLOYER_NAME) %>%  dplyr::summarise(Frequency = n()) %>% arrange(desc(Frequency))
+```
+
+```{r, fig.width=10}
 top_companies[1:20,] %>% 
   ggplot(aes(y = fct_rev(fct_inorder(factor(EMPLOYER_NAME))),x = Frequency)) + 
   geom_col(fill="lightblue",color = "black") +
@@ -122,7 +127,7 @@ The top 20 is dominated by Tech and Consulting companies (primarily). However, i
 ### Geographical analysis
 
 Now we want to see if there are any geographical patterns. To do this we calculated the number of H1-B application per 1M people and plot
-```{r fig.width= 13, eval=FALSE}
+```{r fig.width= 13}
 tidydf <- df %>% 
   group_by(EMPLOYER_STATE) %>% 
   dplyr::summarise(value = n()) %>% 
@@ -148,7 +153,7 @@ It looks that there are high concentrations on the coasts. Woud the percentage o
 
 On the other hand, the states with least immigrants are:
 
-* Montana (2%)
+* Montata (2%)
 * Mississippi (2.5%)
 * Alabama (3%)
 * South Dakota (4%)
@@ -162,7 +167,8 @@ Note: data about immigrant population is based on: https://en.wikipedia.org/wiki
 
 How is the demand for international workers across different indusrties? In other words, what job categories are in high demand for the different industry sectors? Here we present a treemap that shows the top 4 job categories for the top 5 industry sectors. We can't show all jobs and industries for visualization purposes.
 
-```{r fig.width=12, fig.height=12, eval=FALSE}
+
+```{r,echo=FALSE}
 get_num_digits <-function(x){
                   num_digits = floor (log10 (abs (x))) + 1
                   return(num_digits)
@@ -200,7 +206,10 @@ top_ind_job <- df %>% filter(Title %in% top_industries$Title) %>%
                 dplyr::summarise(Frequency = n()) %>% arrange(Title,desc(Frequency) )%>% 
                 group_by(Title) %>% slice_head(n = top_n_jobs)
 
+```
 
+
+```{r fig.width=12, fig.height=12}
 treemap(top_ind_job,
         index = c('Title','job_category'),
         vSize = 'Frequency',
@@ -212,8 +221,8 @@ treemap(top_ind_job,
     align.labels=list(
         c("left", "top"), 
         c("right", "bottom")
-        ),                                   # Where to place labels in the rectangle?
-    overlap.labels=0.1,                      # number between 0 and 1 that determines the tolerance of the overlap between labels. 0 means that labels of lower levels are not printed if higher level labels overlap, 1  means that labels are always printed. In-between values, for instance the default value .5, means that lower level labels are printed if other labels do not overlap with more than .5  times their area size.
+        ),                                   
+    overlap.labels=0.1,                      
     inflate.labels=F,
     palette = 'Pastel1',
     title = "Composition of top company industries (highlighted in black) and job categories")                       # If true, labels are bigger when rectangle is bigger.
@@ -229,7 +238,7 @@ It is very clear that industries belonging to the STEM (Science, Technology, Eng
 
 Nevertheless, there is something surprising: the third industry with most H1-B applications is Colleges, Universities and Professional Schools. This means that these sectors are very interested in international workers and would then be great places to apply for jobs. We couldn't resist to give a peek at the top employers in this last sector:
 
-```{r, eval=FALSE}
+```{r}
 df[df$Title == "Colleges, Universities, and Professional Schools",] %>% 
   group_by(EMPLOYER_NAME) %>%
   dplyr::summarise(Frequency = n()) %>%
@@ -247,14 +256,8 @@ How are H1-B Visa applicants being paid? Our hypothesis is that they should be g
 We downloaded the latest personal income information provided by the U.S. Census in order to compare the general US citizen wages with that of the people applying for H1-B visas.
 Let's look at the data. Note, this file was cleaned to extract the lower and upper wage bounds 
 
-```{r, eval=FALSE}
-personal_income=read.csv("../data/processed/personal_income.csv")
-personal_income
-```
 
-These income ranges are too specific for this analysis so we decided to group by ranges of $25K, except for the last category which is still 100K or more. 
-
-```{r, eval=FALSE}
+```{r, echo=FALSE}
 
 group_size = 25000
 num_breaks = (max(personal_income$lower_bound)-min(personal_income$lower_bound)+1)/group_size
@@ -267,11 +270,7 @@ personal_income$income_group <- fct_recode(personal_income$new_groups,
                                                "$50K to $75K" = "[5e+04,7.5e+04)",
                                                "$75K to $100K" = "[7.5e+04,1e+05)",
                                                "$100K or more" = "[1e+05, Inf]")
-personal_income
-```
-Now lets create the same labels for our dataset
 
-```{r, eval=FALSE}
 
 df$income_group <-discretize(df$annual_wage,method = "fixed",breaks=breaks,infinity = TRUE)
 df$income_group <- fct_recode(df$income_group,
@@ -280,12 +279,14 @@ df$income_group <- fct_recode(df$income_group,
                                                "$50K to $75K" = "[5e+04,7.5e+04)",
                                                "$75K to $100K" = "[7.5e+04,1e+05)",
                                                "$100K or more" = "[1e+05, Inf]")
-
-head(df)
 ```
 
-Finally, let's see how different are wage groups for H1-B applicants vs the general population.
-```{r, eval=FALSE}
+These income ranges are too specific for this analysis so we decided to group by ranges of $25K, except for the last category which is still 100K or more. 
+
+
+Let's see how different are wage groups for H1-B applicants vs the general population.
+
+```{r,echo=FALSE}
 personal_income_by_wage_range <- personal_income %>% 
                           group_by(income_group) %>% 
                           dplyr::summarise(percentage = sum(frequency)*100/sum(personal_income$frequency)) 
@@ -296,7 +297,6 @@ df_by_wage_range <- df %>%
                           group_by(income_group) %>% 
                           dplyr::summarise(percentage = n()*100/nrow(df)) 
 df_by_wage_range$type = "H1-B"
-
 
 tidydf <- rbind(personal_income_by_wage_range,df_by_wage_range)
 
@@ -309,18 +309,18 @@ theme_dotplot <- theme_bw(14) +
         panel.grid.major.y = element_line(size = 0.5),
         panel.grid.minor.x = element_blank())
 
+```
 
+```{r}
 ggplot(tidydf, aes(percentage, income_group ,color = type)) +
   geom_point() +
   labs(x = "Percentage of population", y = "Annual Income Range", title = "Wage Income Ranges", subtitle = "H1-B Applicants vs U.S. General Population" ) +
   theme_dotplot
-
 ```
 
 The differences in salary are stagering! The U.S Nation median wage is in the 25K-50K range while that of H1-B applicants is in the 75K-100K range. This is most likely a reflection of the kind of people which H1-B visas are intended for: High-Skilled speciallized workers with at least a bachelor's degree. Furthermore, notice that the percentage of H1-B applicants that earn less than 50K is minimal. This could mean that "unspecialized" workers are not likely to have "low" wages, or that speciallized workers at low-paying are not willing to sponsor visas because they don't have the financial means (which is why they are paying low wages).
 
-
-```{r, eval=FALSE}
+```{r, echo=FALSE}
 top_n = 5
 cols = c("SOC_CODE","EMPLOYER_STATE","EMPLOYER_NAME")
 top_companies_by_soc_state <- df[,cols] %>% group_by(SOC_CODE,EMPLOYER_STATE,EMPLOYER_NAME) %>%
@@ -328,5 +328,11 @@ top_companies_by_soc_state <- df[,cols] %>% group_by(SOC_CODE,EMPLOYER_STATE,EMP
   slice_max(order_by = frequency, n = top_n, with_ties = FALSE)
 
 top_companies_by_soc_state <- left_join(top_companies_by_soc_state,states[c("Code","State")],by =c("EMPLOYER_STATE"= "Code"))
+write.csv(top_companies_by_soc_state,"data/processed/top_companies_by_soc_state.csv")
 
 ```
+  
+  
+## Summary  
+Given the upward trend in H-1B visas, we can conclude that working in US is an attractive option for foreigners. This means that the chances of acquiring an H-1B visa are shrinking, because the number of visa approvals each year is limited. Additionally, the salary of the immigrant employees increases year by year and at a higher rate than US general population ([source](https://www.cato.org/blog/100-h-1b-employers-offer-average-market-wages-78-offer-more)). Such behavior might explain the increased interest in internationals that want to work in the US.      
+It is clear that the technology and consulting sectors need highly skilled workers and are willing to sponsor H-1B visas in exchange for talent. This is not easy because sponsoring this type of visa can cost an employer about $5,000 per employee. While this speaks highly of these industries, it also suggests that there is a shortage of people who can work in them. Such behavior is also present in the academic and health care industries. Our findings, indicate that someone who is specialized in the technology and consulting sectors has more opportunities finding an employer to sponsor their visa.    

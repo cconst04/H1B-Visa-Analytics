@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 4 Missing values | YOUR TITLE HERE</title>
-  <meta name="description" content="Chapter 4 Missing values | YOUR TITLE HERE" />
-  <meta name="generator" content="bookdown 0.20 and GitBook 2.6.7" />
+  <title>Chapter 4 Missing values | H1B Visa Analytics</title>
+  <meta name="description" content="Chapter 4 Missing values | H1B Visa Analytics" />
+  <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 4 Missing values | YOUR TITLE HERE" />
+  <meta property="og:title" content="Chapter 4 Missing values | H1B Visa Analytics" />
   <meta property="og:type" content="book" />
   
   
@@ -16,15 +16,15 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 4 Missing values | YOUR TITLE HERE" />
+  <meta name="twitter:title" content="Chapter 4 Missing values | H1B Visa Analytics" />
   
   
   
 
-<meta name="author" content="YOUR NAMES HERE" />
+<meta name="author" content="Samir Char, Christodoulos Constantinides" />
 
 
-<meta name="date" content="2020-11-09" />
+<meta name="date" content="2021-04-12" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,7 +33,7 @@
   
 <link rel="prev" href="data-transformation.html"/>
 <link rel="next" href="results.html"/>
-<script src="libs/header-attrs-2.3/header-attrs.js"></script>
+<script src="libs/header-attrs-2.6/header-attrs.js"></script>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -51,7 +51,6 @@
 
 
 
-<script src="libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
 
 
 
@@ -68,14 +67,26 @@
       <nav role="navigation">
 
 <ul class="summary">
-<li><a href="./">SHORT TITLE HERE</a></li>
+<li><a href="./">H1B Visa Analytics</a></li>
 
 <li class="divider"></li>
 <li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
 <li class="chapter" data-level="2" data-path="data-sources.html"><a href="data-sources.html"><i class="fa fa-check"></i><b>2</b> Data sources</a></li>
 <li class="chapter" data-level="3" data-path="data-transformation.html"><a href="data-transformation.html"><i class="fa fa-check"></i><b>3</b> Data transformation</a></li>
-<li class="chapter" data-level="4" data-path="missing-values.html"><a href="missing-values.html"><i class="fa fa-check"></i><b>4</b> Missing values</a></li>
-<li class="chapter" data-level="5" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>5</b> Results</a></li>
+<li class="chapter" data-level="4" data-path="missing-values.html"><a href="missing-values.html"><i class="fa fa-check"></i><b>4</b> Missing values</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="missing-values.html"><a href="missing-values.html#inspecting-missing-values"><i class="fa fa-check"></i><b>4.1</b> Inspecting missing values</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="missing-values.html"><a href="missing-values.html#missing-values-patterns"><i class="fa fa-check"></i><b>4.1.1</b> Missing values patterns</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>5</b> Results</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="results.html"><a href="results.html#number-of-applications-per-year"><i class="fa fa-check"></i><b>5.1</b> Number of applications per year</a></li>
+<li class="chapter" data-level="5.2" data-path="results.html"><a href="results.html#annual-salary-boxplot"><i class="fa fa-check"></i><b>5.2</b> Annual salary boxplot</a></li>
+<li class="chapter" data-level="5.3" data-path="results.html"><a href="results.html#applications-by-subject"><i class="fa fa-check"></i><b>5.3</b> Applications by subject</a></li>
+<li class="chapter" data-level="5.4" data-path="results.html"><a href="results.html#applications-by-subject-with-computer-science-and-maths-removed"><i class="fa fa-check"></i><b>5.4</b> Applications by subject with Computer Science and Maths removed</a></li>
+</ul></li>
 <li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a></li>
 <li class="chapter" data-level="7" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>7</b> Conclusion</a></li>
 <li class="divider"></li>
@@ -89,7 +100,7 @@
       <div class="body-inner">
         <div class="book-header" role="navigation">
           <h1>
-            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">YOUR TITLE HERE</a>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">H1B Visa Analytics</a>
           </h1>
         </div>
 
@@ -99,7 +110,22 @@
             <section class="normal" id="section-">
 <div id="missing-values" class="section level1" number="4">
 <h1><span class="header-section-number">Chapter 4</span> Missing values</h1>
+<div id="inspecting-missing-values" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Inspecting missing values</h2>
+<p><img src="finalproj_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
+<p>A big percentage of PW_2 and LCA_CASE_WAGE_RATE_TO and YR_SOURCE_PUB_2 independently of the state. This means that most employers declare a salary only for their primary state.
+The employer’s postal code (LCA_CASE_EMPLOYER_POSTAL_CODE) is missing depending on the state. Half of the applications from employers from Arkansas are missing the employer’s postal code</p>
+<div id="missing-values-patterns" class="section level3" number="4.1.1">
+<h3><span class="header-section-number">4.1.1</span> Missing values patterns</h3>
+<p><img src="finalproj_files/figure-html/Missing%20values%20combinations-1.png" width="1152" /></p>
+<ul>
+<li>The combination WAGE_RATE_TO, PW_2 and YR_SOURCE_PUB_2 is the most frequent. Each of these columns individually have approximately 80-90% of their values missing. This means that most of the employers specify the exact amount of salary and not a range.<br />
+</li>
+<li>Less than 5% of the records are missing the employers postal code</li>
+</ul>
 
+</div>
+</div>
 </div>
             </section>
 
@@ -138,7 +164,7 @@ gitbook.start({
 "size": 2
 },
 "edit": {
-"link": "https://github.com/YOUR GITHUB USERNAME/YOUR REPO NAME/edit/main/04-missing.Rmd",
+"link": "https://github.com/cconst04/H1B-Visa-Analytics/edit/main/04-missing.Rmd",
 "text": "Edit"
 },
 "history": {
@@ -146,7 +172,7 @@ gitbook.start({
 "text": null
 },
 "view": {
-"link": "https://github.com/YOUR GITHUB USERNAME/YOUR REPO NAME/blob/main/04-missing.Rmd",
+"link": "https://github.com/cconst04/H1B-Visa-Analytics/blob/main/04-missing.Rmd",
 "text": null
 },
 "download": null,
