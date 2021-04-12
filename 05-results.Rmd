@@ -322,8 +322,8 @@ The differences in salary are stagering! The U.S Nation median wage is in the 25
 
 ```{r, echo=FALSE}
 top_n = 5
-cols = c("SOC_CODE","EMPLOYER_STATE","EMPLOYER_NAME")
-top_companies_by_soc_state <- df[,cols] %>% group_by(SOC_CODE,EMPLOYER_STATE,EMPLOYER_NAME) %>%
+cols = c("job_category","EMPLOYER_STATE","EMPLOYER_NAME")
+top_companies_by_soc_state <- df[,cols] %>% group_by(job_category,EMPLOYER_STATE,EMPLOYER_NAME) %>%
   dplyr::summarise(frequency = n()) %>%
   slice_max(order_by = frequency, n = top_n, with_ties = FALSE)
 
