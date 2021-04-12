@@ -26,7 +26,7 @@ JOB_CODES <- c('11'='Management', '13'='Financial Operations', '23'='Legal',
 START_YEAR <- 2009
 END_YEAR <- 2020
 ```
-```{r Loading datasets}
+```{r}
 test <- read.csv('data/raw/lca/2010.csv')
 test <- test[test$LCA_CASE_EMPLOYER_STATE %in% state.abb, ]
 count_applications <- list()
@@ -89,7 +89,7 @@ ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col(fill="lightblue",color = "black"
   labs(y= "Job sector", x = "Number of applications")
 ```  
   
-Financial operations is the second most famous job in the H-1B applications every year. There is an initial increase in the number of applications between 2009 and 2012. In 2013 the number of applicants is similar to that of the previous year, followed by an increase in 2014. From 2015 to 2019 total applications in this sector remain constant with around 480000 applicants. In 2020 there is a reduction, with total 400000 applicants. It is worth mentioning that number of applications for each sector between 2016 and 2020 are very similar. This may be because there is a fixed number of positions for international workers that they are applying for H-1B visa.  For the rest of sectors there is an increase between 2009 and 2011. In 2011 there is a big decrease in the management and community with social services related job applications. For the next 3 years there is a slight fluctuation in each sector  
+Financial operations is the second most famous job in the H-1B applications every year. There is an initial increase in the number of applications between 2009 and 2012. In 2013 the number of applicants is similar to that of the previous year, followed by an increase in 2014. From 2015 to 2019 total applications in this sector remain constant with around 480000 applicants. In 2020 there is a reduction, with total 400000 applicants. It is worth mentioning that number of applications for each sector between 2016 and 2020 are very similar. This may be because there is a fixed number of positions for international workers that they are applying for H-1B visa. For the rest of the sectors there is an increase between 2009 and 2011. In 2011 there is a big decrease in the management and community with social services related job applications. For the next 3 years there is some fluctuation in each sector.    
 
 ## Analysis of most recent year: 2020
 
