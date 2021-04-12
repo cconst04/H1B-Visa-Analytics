@@ -1,4 +1,7 @@
 # Results
+
+## Analysis over the years
+
 ```{r, echo=FALSE}
 library(dplyr)
 library(mi)
@@ -6,6 +9,13 @@ library(ggplot2)
 library(naniar)
 library(extracat)
 library(lubridate)
+library(tidyverse)
+library(forcats)
+library(choroplethr)
+library(choroplethrMaps)
+library(arules)
+library(treemap)
+
 JOB_CODES <- c('11'='Management', '13'='Financial Operations', '23'='Legal',
                '15'='Computer and Maths', '16'='Architecture and Engineering',
                '17'='Life', '18'='Physical', '19'='Life, Physical, and Social Science',
@@ -20,6 +30,7 @@ JOB_CODES <- c('11'='Management', '13'='Financial Operations', '23'='Legal',
 START_YEAR <- 2009
 END_YEAR <- 2020
 ```
+
 ```{r Loading datasets}
 test <- read.csv('csv/2010.csv')
 test <- test[test$LCA_CASE_EMPLOYER_STATE %in% state.abb, ]
@@ -60,7 +71,8 @@ counts <- count(df_tmp, year, SOC_CODE)
 counts <- transform(counts, SOC_CODE = JOB_CODES[SOC_CODE])
 counts <- counts[!is.na(counts$SOC_CODE),]
 ```
-## Inspecting missing values  
+
+### Inspecting missing values  
 We have selected randomly a year and plotted the percentage values missing grouped by state.  
 ```{r Missing Values}
 gg_miss_fct(x = test, fct = LCA_CASE_EMPLOYER_STATE)
@@ -81,32 +93,32 @@ gg_miss_fct(x = df_ucsis, fct = Fiscal.Year)
 ```  
 There are almost no missing data  
   
-## 2020 missing values  
+### 2020 missing values  
 ```{r}
 gg_miss_fct(df_2020, BEGIN_MONTH) + scale_x_discrete(expand=c(0, 0))
 ```  
 - Between July and September AGENT_ATTORNEY_PHONE_EXT, EMPLOYER_PHONE_EXT and EMPLOYER_POC_PHONE_EXT are missing  
 - PW_OTHER_YEAR is completely missing  
   
-## Missing values from a sample  
+### Missing values from a sample  
 ```{r}
 image(missing_data.frame(df_sample))
 ```  
 
-## Number of applications per year  
+### Number of applications per year  
 ```{r Applications per year}
 ggplot(data=num_applications, aes(x=year, y=total_applications)) +
   geom_line()
 ```   
 There is an upward trend in the number of applications from 2009 to 2020  
   
-## Annual salary boxplot    
+### Annual salary boxplot    
 ```{r}
 boxplot(annual_wage ~ year, data=df, outline=FALSE)
 ```  
 There is an upward trend in the 25th quartile, median, 75th quartile and maximum salary from 2009 to 2020  
 
-## Applications by subject  
+### Applications by subject  
 ```{r}
 ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col() + facet_wrap(~ year, ncol=2)
 ```  
@@ -116,8 +128,267 @@ Jobs related to computer science and mathematics are the most famous for H-1B ap
 counts <- counts[counts$SOC_CODE != 'Computer and Maths',]
 ```  
   
-## Applications by subject with Computer Science and Maths removed  
+### Applications by subject with Computer Science and Maths removed  
 ```{r}
 ggplot(counts, aes(x=n, y=SOC_CODE)) + geom_col() + facet_wrap(~ year, ncol=2) 
 ```  
 Financial operations is the second most famous job for every year
+
+
+
+## Analysis of most recent year: 2020
+
+```{r, echo=FALSE}
+df <- read.csv("../data/processed/processed_2020.csv") #Using most recent data
+states <- read.csv("../data/external/states.csv")
+states_population <- read.csv("../data/raw/state_population.csv")
+states <- left_join(states,states_population, by=c("State"="NAME"))
+df <- df %>% filter(EMPLOYER_STATE %in% states$Code)
+soc_codes = read.csv("../data/processed/soc_codes.csv")
+naics_codes = read.csv("../data/processed/naics_sectors.csv")
+personal_income=read.csv("../data/processed/personal_income.csv")
+
+```
+
+Data dimensions
+```{r}
+print(dim(df))
+```
+
+Print column names
+```{r}
+names(df)
+```
+Quick look at dataframe
+```{r}
+head(df)
+```
+### Top Employers
+
+Lets look at the top 20 Companies overall in 2020 filing H1-B Visa applications. This means across all industries and jobs.
+
+```{r,echo=FALSE}
+top_companies = df %>% group_by(EMPLOYER_NAME) %>%  dplyr::summarise(Frequency = n()) %>% arrange(desc(Frequency))
+```
+
+```{r, fig.width=10}
+top_companies[1:20,] %>% 
+  ggplot(aes(y = fct_rev(fct_inorder(factor(EMPLOYER_NAME))),x = Frequency)) + 
+  geom_col(fill="lightblue",color = "black") +
+  labs(y = "Employer Name", title = "Top H1-B Visa Sponsors in the U.S.", x = "Number of H1-B applications filed")
+
+```
+
+The top 20 is dominated by Tech and Consulting companies (primarily). However, it's worth noticing that these companies are also very big in terms of their worth and more importantly, their number of employees. For example, Cognizant has 289.000 employees, Infosys 242.000, Tata Consultancy has 470.000, Google 135.000. Nevertheless, there are large companies in all industries, but for some reason tech and consulting stand out. For a future work, it might be interesting to normalize these frequencies by the company size to get a better sense of the probability that a company sponsors an H1B visa for an employee.
+
+
+### Geographical analysis
+
+Now we want to see if there are any geographical patterns. To do this we calculated the number of H1-B application per 1M people and plot
+```{r fig.width= 13}
+tidydf <- df %>% 
+  group_by(EMPLOYER_STATE) %>% 
+  dplyr::summarise(value = n()) %>% 
+  filter(EMPLOYER_STATE %in% states$Code)
+
+tidydf<- left_join(tidydf,states,by = c("EMPLOYER_STATE" = "Code")) %>% mutate(region = tolower(State))
+tidydf <- tidydf %>% mutate(value = value*1000000/tidydf$POPESTIMATE2020)
+
+state_choropleth(as.data.frame(tidydf),title  = "H1B visa requests in the US", 
+                 legend = "Applications per 1M people")
+```
+
+It looks that there are high concentrations on the coasts. Woud the percentage of immigrant population by state have something to do with this? Apparently, yes! After doing some research, we found that some of the top states by immigrant population (percentage) include:
+
+* California (27%)
+* New York (23%)
+* New Jersey (22%)
+* Texas (17%)
+* Washington (15%)
+* Massachusetts (17%)
+* Illinois (14%)
+* Maryland (15%)
+
+On the other hand, the states with least immigrants are:
+
+* Montata (2%)
+* Mississippi (2.5%)
+* Alabama (3%)
+* South Dakota (4%)
+
+Of course, immigration is not a perfect predictor for the number of applications. There are other factor into play like the presence of popular industries (e.g., Tech, Finance, Consulting). Another factor may be the wealth of the state measured by houshold income which would help explain some of the variance. For example, Nevada and Arizona are in the top 15 of the states with most immigrants but their percentage of applications is not as high as expected, nonetheless, these states are in the 28th and 30th place according to household income. On the other hand, the top "richest" states agree with the ones with highes immigrants and highest visa applications.
+
+Note: data about immigrant population is based on: https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_immigrant_population and https://worldpopulationreview.com/state-rankings/states-with-the-most-immigrants. Data about household income was found here: https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_income
+
+
+### Employer Industry and Job Category Composition
+
+How is the demand for international workers across different indusrties? In other words, what job categories are in high demand for the different industry sectors? Here we present a treemap that shows the top 4 job categories for the top 5 industry sectors. We can't show all jobs and industries for visualization purposes.
+
+
+```{r,echo=FALSE}
+get_num_digits <-function(x){
+                  num_digits = floor (log10 (abs (x))) + 1
+                  return(num_digits)
+}
+
+strict_substr <-function(df,column,start,finish){
+  return(if_else(str_length(df[,column]) >=finish, substr(df[,column],start,finish),NULL))
+}
+
+df$NAICS_CODE <- as.character(df$NAICS_CODE)
+
+df$naics_sector <-strict_substr(df,"NAICS_CODE",1,2)
+df$industry_group <- strict_substr(df,"NAICS_CODE",1,4)
+df$naics_industry <- strict_substr(df,"NAICS_CODE",1,5)
+df$national_industry <- strict_substr(df,"NAICS_CODE",1,6)
+
+
+naics_codes$industry_group <- as.character(naics_codes$industry_group)
+df <- left_join(df,naics_codes,by="industry_group")
+df <- left_join(df,soc_codes,by = "SOC_CODE")
+
+
+top_n_industries = 5
+top_n_jobs = 4
+
+top_industries <- (df %>%
+                    group_by(Title) %>% 
+                    dplyr::summarise(Frequency = n()) %>% 
+                    arrange(desc(Frequency)) %>%
+                    head(top_n_industries) )['Title']
+
+
+top_ind_job <- df %>% filter(Title %in% top_industries$Title) %>%
+                group_by(Title,job_category) %>% 
+                dplyr::summarise(Frequency = n()) %>% arrange(Title,desc(Frequency) )%>% 
+                group_by(Title) %>% slice_head(n = top_n_jobs)
+
+```
+
+
+```{r fig.width=12, fig.height=12}
+treemap(top_ind_job,
+        index = c('Title','job_category'),
+        vSize = 'Frequency',
+        type = 'index',
+    fontsize.labels=c(10,8),                # size of labels. Give the size per level of aggregation: size for group, size for subgroup, sub-subgroups...
+    fontcolor.labels=c("white","black"),    # Color of labels
+    fontface.labels=c(2,1),                  # Font of labels: 1,2,3,4 for normal, bold, italic, bold-italic...
+    bg.labels=c("black"),              # Background color of labels
+    align.labels=list(
+        c("left", "top"), 
+        c("right", "bottom")
+        ),                                   
+    overlap.labels=0.1,                      
+    inflate.labels=F,
+    palette = 'Pastel1',
+    title = "Composition of top company industries (highlighted in black) and job categories")                       # If true, labels are bigger when rectangle is bigger.
+
+```
+
+It is very clear that industries belonging to the STEM (Science, Technology, Engineering and Mathematics) fields dominate in visa applications. This is great news for Data Scientists like us because it means companies in our industry are more than happy to sponsor us (what a relief). Additionally, the top job categories in each industry sector remain pretty much the same:
+
+* Computer and Mathematical Occupationis
+* Business and Financial Operations Occupations
+* Management Occupations
+* Architecture and Engineerring Occupations
+
+Nevertheless, there is something surprising: the third industry with most H1-B applications is Colleges, Universities and Professional Schools. This means that these sectors are very interested in international workers and would then be great places to apply for jobs. We couldn't resist to give a peek at the top employers in this last sector:
+
+```{r}
+df[df$Title == "Colleges, Universities, and Professional Schools",] %>% 
+  group_by(EMPLOYER_NAME) %>%
+  dplyr::summarise(Frequency = n()) %>%
+  arrange(desc(Frequency)) %>% 
+  drop_na()
+```
+
+We are so proud to see Columbia University at the top! We are at a great place to learn but also with substantial chances of employment.
+
+
+### Wage analysis
+
+How are H1-B Visa applicants being paid? Our hypothesis is that they should be getting a more than average wage because this visa is intended for "speciallized workers".
+
+We downloaded the latest personal income information provided by the U.S. Census in order to compare the general US citizen wages with that of the people applying for H1-B visas.
+Let's look at the data. Note, this file was cleaned to extract the lower and upper wage bounds 
+
+```{r, echo=FALSE}
+personal_income
+```
+
+```{r, echo=FALSE}
+
+group_size = 25000
+num_breaks = (max(personal_income$lower_bound)-min(personal_income$lower_bound)+1)/group_size
+breaks  = c(seq(0,100000,group_size),100000.0001)
+
+personal_income$new_groups <-discretize(personal_income$lower_bound,method = "fixed",breaks=breaks,infinity = TRUE)
+personal_income$income_group <- fct_recode(personal_income$new_groups,
+                                               "Less than $25K"="[-Inf,2.5e+04)",
+                                               "$25K to $50K" = "[2.5e+04,5e+04)",
+                                               "$50K to $75K" = "[5e+04,7.5e+04)",
+                                               "$75K to $100K" = "[7.5e+04,1e+05)",
+                                               "$100K or more" = "[1e+05, Inf]")
+
+
+df$income_group <-discretize(df$annual_wage,method = "fixed",breaks=breaks,infinity = TRUE)
+df$income_group <- fct_recode(df$income_group,
+                                               "Less than $25K"="[-Inf,2.5e+04)",
+                                               "$25K to $50K" = "[2.5e+04,5e+04)",
+                                               "$50K to $75K" = "[5e+04,7.5e+04)",
+                                               "$75K to $100K" = "[7.5e+04,1e+05)",
+                                               "$100K or more" = "[1e+05, Inf]")
+```
+
+These income ranges are too specific for this analysis so we decided to group by ranges of $25K, except for the last category which is still 100K or more. 
+
+
+Let's see how different are wage groups for H1-B applicants vs the general population.
+
+```{r,echo=FALSE}
+personal_income_by_wage_range <- personal_income %>% 
+                          group_by(income_group) %>% 
+                          dplyr::summarise(percentage = sum(frequency)*100/sum(personal_income$frequency)) 
+
+personal_income_by_wage_range$type = "General"
+
+df_by_wage_range <- df %>% 
+                          group_by(income_group) %>% 
+                          dplyr::summarise(percentage = n()*100/nrow(df)) 
+df_by_wage_range$type = "H1-B"
+
+tidydf <- rbind(personal_income_by_wage_range,df_by_wage_range)
+
+#Thanks to https://edav.info/cleveland.html
+theme_dotplot <- theme_bw(14) +
+    theme(axis.text.y = element_text(size = rel(.75)),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size = rel(.75)),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_line(size = 0.5),
+        panel.grid.minor.x = element_blank())
+
+```
+
+```{r}
+ggplot(tidydf, aes(percentage, income_group ,color = type)) +
+  geom_point() +
+  labs(x = "Percentage of population", y = "Annual Income Range", title = "Wage Income Ranges", subtitle = "H1-B Applicants vs U.S. General Population" ) +
+  theme_dotplot
+```
+
+The differences in salary are stagering! The U.S Nation median wage is in the 25K-50K range while that of H1-B applicants is in the 75K-100K range. This is most likely a reflection of the kind of people which H1-B visas are intended for: High-Skilled speciallized workers with at least a bachelor's degree. Furthermore, notice that the percentage of H1-B applicants that earn less than 50K is minimal. This could mean that "unspecialized" workers are not likely to have "low" wages, or that speciallized workers at low-paying are not willing to sponsor visas because they don't have the financial means (which is why they are paying low wages).
+
+```{r, echo=FALSE}
+top_n = 5
+cols = c("SOC_CODE","EMPLOYER_STATE","EMPLOYER_NAME")
+top_companies_by_soc_state <- df[,cols] %>% group_by(SOC_CODE,EMPLOYER_STATE,EMPLOYER_NAME) %>%
+  dplyr::summarise(frequency = n()) %>%
+  slice_max(order_by = frequency, n = top_n, with_ties = FALSE)
+
+top_companies_by_soc_state <- left_join(top_companies_by_soc_state,states[c("Code","State")],by =c("EMPLOYER_STATE"= "Code"))
+write.csv(top_companies_by_soc_state,"../data/processed/top_companies_by_soc_state.csv")
+
+```

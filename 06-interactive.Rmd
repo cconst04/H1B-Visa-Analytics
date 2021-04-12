@@ -1,3 +1,4 @@
 # Interactive component
 
 
+<iframe src="company_recommender.html" width="400" height="300"></iframe>
