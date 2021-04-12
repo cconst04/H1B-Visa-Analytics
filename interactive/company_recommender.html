@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Company Recommender</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+
+    
+
+    <div style="position: relative; left: 800px; top: 190px">
+        <!-- Initialize a select button -->
+        <select id="selectState"></select>
+        <!-- Initialize a select button -->
+        <select id="selectSocCode"></select>
+    </div>
+
+  </head>
+
+  <body>
+
+    <div id="ic-description" style="width: 600px; position: relative; left: 50px;">  
+        <h3>Company Recommender</h3>
+        <p>
+            Which company should you work for to maximize your chances of getting and H1-B Visa sponsored?
+        </p>
+        <p>
+            Select a State and your closest job category and we show you the top ranked employers!
+        </p>
+        <br>
+    </div>
+
+    <div id = "graph-title" style = "width: 200px; position: relative; left: 280px">
+        <h3>Top Ranked Employers</h3>
+
+    </div>
+
+    <div id="interactive-component">
+    </div>
+    <script>
+
+// Read data      
+var rowConverter = function (d) {
+  return {
+    job_cat: d.job_category,
+    e_state: d.State,
+    e_name: d.EMPLOYER_NAME,
+    freq: +d.frequency
+    }
+};  
+
+// based on https://gist.github.com/huytd/327e453c95ca3edadb32d0c867e2561b
+function textSize(text) {
+    if (!d3) return;
+    var container = d3.select("#interactive-component").append("svg");
+    container.append('text').attr("x",-99999).attr("y",-99999).text(text);
+    var size = container.node().getBBox();
+    container.remove();
+    return { width: size.width, height: size.height };
+}
+
+d3.csv("https://raw.githubusercontent.com/cconst04/H1B-Visas-Insights/master/data/processed/top_companies_by_soc_state.csv", rowConverter)
+  .then(function(data) {
+
+//Function to filter data based on groups.
+//Inspired by https://stackoverflow.com/questions/39964570/how-to-filter-data-with-d3-js
+function getFilteredData(data, state, job_cat) {
+    return data.filter(function(d) { return (d.e_state === state)&&(d.job_cat === job_cat); });
+    };
+    
+function filter_by_state(data, state) {
+    return data.filter(function(d) { return (d.e_state === state); });
+    };
+
+   
+    
+var initial_state = "California"
+var initial_soc_code = "Computer and Mathematical Occupations"
+   
+
+
+var filtered_data = getFilteredData(data, initial_state, initial_soc_code)
+
+//constants
+var w = 700;
+var h = 400;
+var top_n = 5;
+var offset = 0;
+var max_employer_name_length = d3.max(data, function(d) {return d.e_name.length});
+var longest_e_name = d3.filter(data,function(d) {return d.e_name.length == max_employer_name_length })[0].e_name
+
+//Dropdown data
+var states = [...new Set(data.map(d => d.e_state))]
+var filtered_data_by_state =  filter_by_state(data, initial_state)
+var soc_codes_of_state = [...new Set(filtered_data_by_state.map(d => d.job_cat))]
+
+//data.filter(function(d) {return } )
+
+//var soc_codes = data.map(d => d.e_state)
+
+
+//dropdowns
+d3.select("#selectState")
+    .selectAll('option')
+    .data(states)
+    .enter()
+    .append('option')
+    .text(d=>d) // text showed in the menu
+    .attr("value", function (d) { return d; }) // corresponding value returned by the button
+
+d3.select("#selectState").property("value",initial_state)
+
+d3.select("#selectSocCode")
+    .selectAll('option')
+    .data(soc_codes_of_state)
+    .enter()
+    .append('option')
+    .text(d=>d) // text showed in the menu
+    .attr("value", function (d) { return d; }) // corresponding value returned by the button
+
+d3.select("#selectSocCode").property("value",initial_soc_code)
+
+console.log(soc_codes_of_state)
+
+//variables
+var top_employers = filtered_data.map(d => d.e_name)
+
+//Margins
+var margin = {top: 25, right: 0, bottom: 25,
+    left: 50};
+var innerWidth = w - margin.left - margin.right;
+var innerHeight = h - margin.top - margin.bottom;
+
+//Scales
+var yScale = d3.scaleBand()
+    .domain(d3.range(1,top_n+1))
+    //.domain(top_employers)
+    .range([0,innerHeight])
+    .paddingInner(.5);
+
+var xScale = d3.scaleLinear()
+    .domain([0, d3.max(filtered_data, function(d) {return d.freq;} )])
+    .range([0, innerWidth])
+
+var xAxis = d3.axisBottom()
+    .scale(xScale);
+
+var yAxis = d3.axisLeft()
+    .scale(yScale);
+
+ // add svg
+ var svg = d3.select("#interactive-component")
+    .append("svg")
+      .attr("width", w)
+      .attr("height", h);
+
+var bars = svg.append("g")
+    .attr("id", "bars")
+    .attr("transform", `translate (${margin.left}, ${margin.top})`)
+    .selectAll("rect")
+    .data(filtered_data);
+
+bars.enter().append("rect")
+    .attr("y", (d, i) => yScale(i+1))
+    .attr("x", 0)
+    .attr("height", yScale.bandwidth())
+    .attr("width", d => xScale(d.freq))
+    .attr("fill", "blue");
+
+//Labels
+var labels = d3.select("#bars") 
+    .attr("transform", `translate (${margin.left}, ${margin.top})`)
+    .selectAll("text")
+    .data(top_employers)
+
+labels.enter().append("text")
+    .attr("class",'label')
+    .attr("x", 0 )
+    .attr("y", (d,i) =>  yScale(i+1)-3)
+    .text(d => d)
+    .attr("fill", "black")
+    .attr("text-anchor", "right");
+
+var xlab = d3.select("#bars").attr("transform", `translate (${margin.left}, ${margin.top})`)
+/* xlab.append("text")
+    .attr("class", "x label")
+    .attr("text-anchor", "end")
+    .attr("x",500)
+    .attr("y", 360)
+    .text("Number of H1-B Visas Sponsored in 2019");
+ */
+// add axes
+svg.append("g")
+      .attr("id", "yAxis")
+      .attr("transform", `translate (${margin.left}, ${margin.top})`)
+      .call(yAxis);
+
+svg.append("g")
+    .attr("id", "xAxis")
+    .attr("transform", `translate (${margin.left}, ${h-margin.bottom})`)
+    .call(xAxis);
+
+//Update
+function update(data) {
+
+
+    //Top employers
+    var top_employers = data.map(d => d.e_name)
+
+    //Update xAxis
+    xScale.domain([0, d3.max(data, function(d) {return d.freq;} )]);
+    svg.select("#xAxis")
+     .attr("transform", `translate (${margin.left}, ${h-margin.bottom})`)
+     .transition().duration(2000).call(xAxis);
+
+    //Update bars
+    var bars = svg.select("#bars").selectAll("rect")    // data join
+    .data(data);
+
+    bars.enter()
+        .append("rect")    // add new elements
+        .attr("x", 0)
+        .attr("y", (d, i) => yScale(i+1))
+        .attr("width", d => xScale(d.freq))
+        .attr("height", yScale.bandwidth())
+        .attr("fill", "blue")
+        .merge(bars)    // merge
+        .transition()
+        .duration(2000)
+        .attr("width", d => xScale(d.freq))
+        .attr("fill", "blue");
+
+    bars.exit().transition().duration(2000).attr("width",d=>xScale(0)).remove(); ;
+
+    //bars.exit().transition()   // remove extra elements
+
+     //Update labels
+     var labels = svg.select("#bars").selectAll("text")
+        .data(top_employers)
+
+
+    labels.enter()
+        .append("text") //add new elements just in case
+        .attr("x",0)
+        .attr("y", (d,i) =>  yScale(i+1)-3)
+        .attr("fill", "black")
+        .attr("text-anchor", "right")
+        .text(d => d)
+        .merge(labels)
+        .transition()
+        .duration(1000)
+        .style("opacity", 0)
+        .transition().duration(500)
+        .style("opacity", 1)
+        .text(d => d);
+
+    labels.exit().remove();
+    };
+   
+
+d3.select("#selectState").on("change",function(d){
+    //Get input from state and soc code
+    var selectedState = d3.select(this).property("value")
+
+    //filter data by state
+    var filtered_data_by_state =  filter_by_state(data, selectedState)
+
+    //Update possible soc codes
+    var soc_codes_of_state = [...new Set(filtered_data_by_state.map(d => d.job_cat))]
+    console.log(soc_codes_of_state)
+
+    var soc_code_options = d3.select("#selectSocCode")
+                             .selectAll('option')
+                             .data([...new Set(filtered_data_by_state.map(d => d.job_cat))])
+
+    console.log(soc_code_options)                             
+    console.log(soc_code_options.enter())
+    soc_code_options.enter()
+        .append('option')
+        .text(d=>d) // text showed in the menu
+        .attr("value", d=>d) // corresponding value returned by the button
+        .merge(soc_code_options)
+        .text(d=>d) // text showed in the menu
+        .attr("value", d=>d) // corresponding value returned by the button
+    
+    console.log(soc_code_options.exit())
+    soc_code_options.exit().remove(); 
+
+    var selectedSocCode = d3.select("#selectSocCode").property("value")
+    if (soc_codes_of_state.includes(selectedSocCode)) {
+        update(filtered_data = getFilteredData(data, selectedState, selectedSocCode))
+
+    } else {
+        update(filtered_data = getFilteredData(data, selectedState, soc_codes_of_state[0]))
+    
+    } 
+
+})
+
+d3.select("#selectSocCode").on("change",function(d){
+    var selectedSocCode = d3.select(this).property("value")
+    var selectedState = d3.select("#selectState").property("value")
+
+    
+    update(filtered_data = getFilteredData(data, selectedState, selectedSocCode))
+
+})
+  
+
+})
+  .catch(function(error) {
+    console.log(error);  
+  });
+
+  
+
+    
+    </script>
+        <div id="ic-description" style="width: 300px; position: relative; left: 250px;">  
+            <p>
+                Number of H1-B Visas Sponsored in 2019
+            </p>
+            <br>
+        </div>
+    
+    
+  </body>
+
+</html>
+
