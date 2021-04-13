@@ -7,9 +7,12 @@
 
 
 
-    <div style="position: relative; left: 800px; top: 190px">
+    <div style="position: relative; left: 90px; top: 215px">
         <!-- Initialize a select button -->
         <select id="selectState"></select>
+    </div>
+
+    <div style="position: relative; left: 500px; top: 190px">
         <!-- Initialize a select button -->
         <select id="selectSocCode"></select>
     </div>
@@ -260,20 +263,20 @@ function update(data) {
 d3.select("#selectState").on("change",function(d){
     //Get input from state and soc code
     var selectedState = d3.select(this).property("value")
-
+    
+    var selectedSocCode = d3.select("#selectSocCode").property("value")
     //filter data by state
     var filtered_data_by_state =  filter_by_state(data, selectedState)
 
     //Update possible soc codes
     var soc_codes_of_state = [...new Set(filtered_data_by_state.map(d => d.job_cat))]
-    console.log(soc_codes_of_state)
 
     var soc_code_options = d3.select("#selectSocCode")
                              .selectAll('option')
                              .data([...new Set(filtered_data_by_state.map(d => d.job_cat))])
 
-    console.log(soc_code_options)                             
-    console.log(soc_code_options.enter())
+    console.log([...new Set(filtered_data_by_state.map(d => d.job_cat))])
+
     soc_code_options.enter()
         .append('option')
         .text(d=>d) // text showed in the menu
@@ -282,14 +285,19 @@ d3.select("#selectState").on("change",function(d){
         .text(d=>d) // text showed in the menu
         .attr("value", d=>d) // corresponding value returned by the button
 
-    console.log(soc_code_options.exit())
+
     soc_code_options.exit().remove(); 
 
-    var selectedSocCode = d3.select("#selectSocCode").property("value")
+    
+
+    console.log(selectedSocCode)
     if (soc_codes_of_state.includes(selectedSocCode)) {
+        console.log("not random")
+        d3.select("#selectSocCode").property("value",selectedSocCode)
         update(filtered_data = getFilteredData(data, selectedState, selectedSocCode))
 
     } else {
+        console.log("random")
         update(filtered_data = getFilteredData(data, selectedState, soc_codes_of_state[0]))
 
     } 
