@@ -298,6 +298,7 @@ d3.select("#selectState").on("change",function(d){
 
     } else {
         console.log("random")
+        d3.select("#selectSocCode").property("value",soc_codes_of_state[0])
         update(filtered_data = getFilteredData(data, selectedState, soc_codes_of_state[0]))
 
     } 
